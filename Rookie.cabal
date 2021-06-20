@@ -1,0 +1,14 @@
+name:                Rookie
+version:             0.1.0.0
+-- synopsis:
+-- description:
+homepage:            https://github.com/githubuser/Rookie#readme
+license:             BSD3
+license-file:        LICENSE
+author:              Piotr Wojtczak, Wiktor Czyz
+maintainer:          example@example.com
+copyright:           2021 Piotr Wojtczak & Wiktor Czyz
+category:            Web
+build-type:          Simple
+cabal-version:       >=1.10
+extra-source-files:  README.md
