@@ -1,13 +1,19 @@
-module BoardState (
-    BoardState
-) where
+module BoardState where
 
 import Data.Word
 import Data.Array
 import Data.Bits
 import BitBoard
 
-type Square = (Int, Int)
+data Square = A1 | B1 | C1 | D1 | E1 | F1 | G1 | H1
+            | A2 | B2 | C2 | D2 | E2 | F2 | G2 | H2
+            | A3 | B3 | C3 | D3 | E3 | F3 | G3 | H3
+            | A4 | B4 | C4 | D4 | E4 | F4 | G4 | H4
+            | A5 | B5 | C5 | D5 | E5 | F5 | G5 | H5
+            | A6 | B6 | C6 | D6 | E6 | F6 | G6 | H6
+            | A7 | B7 | C7 | D7 | E7 | F7 | G7 | H7
+            | A8 | B8 | C8 | D8 | E8 | F8 | G8 | H8
+    deriving (Eq, Ord, Enum, Ix, Show)
 
 data Piece = Pawn | Knight | Bishop | Rook | Queen | King
     deriving (Eq, Ord, Enum, Ix, Show)
@@ -15,11 +21,27 @@ data Piece = Pawn | Knight | Bishop | Rook | Queen | King
 data Color = White | Black
     deriving (Eq, Ord, Ix, Show)
 
+opposite :: Color -> Color
+opposite White = Black
+opposite Black = White
+
+-- Castling rights
+
+castlingRight :: Color -> Piece -> Int
+castlingRight White King = 1
+castlingRight White Queen = 2
+castlingRight Black King = 4
+castlingRight Black Queen = 8
+castlingRight _ _ = 0
+
 -- Complete representation of the board
 
 data BoardState = BoardState {
     pieces :: Array Color (Array Piece BitBoard),
     allPieces :: Array Color BitBoard,
+    enPassant :: BitBoard,
+    castling :: Int, -- k q K Q
+    ply :: Int,
     eval :: Int
 }
 
@@ -31,39 +53,47 @@ initBoard =
         BoardState {
             pieces = listArray (White, Black) $ map (listArray (Pawn, King)) pieceList,
             allPieces = listArray (White, Black) $ map sum pieceList,
+            enPassant = 0,
+            castling = castlingRight White King .|. castlingRight White Queen .|. castlingRight Black King .|. castlingRight Black Queen,
+            ply = 0,
             eval = 0
         }
 
 startingPositions :: Color -> Piece -> BitBoard
-startingPositions color piece = sum $ map (bit . squareToIndex) $ getStartingSquares color piece
+startingPositions color piece = sum $ map squareToBB $ getStartingSquares color piece
 
 getStartingSquares :: Color -> Piece -> [Square]
 getStartingSquares color piece = case color of
     White -> case piece of
-        Pawn -> [(1, 0), (1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7)]
-        Knight -> [(0, 1), (0, 6)]
-        Bishop -> [(0, 2), (0, 5)]
-        Rook -> [(0, 0), (0, 7)]
-        Queen -> [(0, 3)]
-        King -> [(0, 4)]
+        Pawn -> range (A2, H2)
+        Knight -> [B1, G1]
+        Bishop -> [C1, F1]
+        Rook -> [A1, H1]
+        Queen -> [D1]
+        King -> [E1]
     Black -> case piece of
-        Pawn -> [(6, 0), (6, 1), (6, 2), (6, 3), (6, 4), (6, 5), (6, 6), (6, 7)]
-        Knight -> [(7, 1), (7, 6)]
-        Bishop -> [(7, 2), (7, 5)]
-        Rook -> [(7, 0), (7, 7)]
-        Queen -> [(7, 3)]
-        King -> [(7, 4)]
+        Pawn -> range (A7, H7)
+        Knight -> [B8, G8]
+        Bishop -> [C8, F8]
+        Rook -> [A8, H8]
+        Queen -> [D8]
+        King -> [E8]
 
-squareToIndex :: Square -> Int
-squareToIndex (rank, file) = (fromIntegral rank * 8) + fromIntegral file
+-- Square helper functions
+
+squareToFileRank :: Square -> (Int, Int)
+squareToFileRank sq = (fileOf $ fromEnum sq, rankOf $ fromEnum sq)
+
+squareToBB :: Square -> BitBoard
+squareToBB sq = square $ fromEnum sq
+
+genBitBoardFromSquares :: [Square] -> BitBoard
+genBitBoardFromSquares squares = foldl xor 0 $ map (square . fromEnum) squares
 
 -- Piece helper functions
+
 containsPiece :: BoardState -> Square -> Color -> Piece -> Bool
-containsPiece state square color piece =
-    let i = squareToIndex square
-        pos = pieces state ! color ! piece
-    in
-        testBit pos i
+containsPiece state square color piece = testBit (pieces state ! color ! piece) $ fromEnum square
 
 getPieceAt :: BoardState -> Square -> Maybe (Color, Piece)
 getPieceAt state square =
