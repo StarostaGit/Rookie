@@ -1,10 +1,10 @@
-module Moves where
+module Engine.Moves where
 
 import Data.Array
 import Data.Bits
 import Data.Word
-import BitBoard
-import BoardState
+import Engine.BitBoard
+import Engine.BoardState
 
 -- King
 
@@ -173,7 +173,7 @@ queenMovesValid state color =
 
 genSlidingMoveset :: Int -> BitBoard -> BitBoard -> BitBoard
 genSlidingMoveset square blockers mask =
-    let piece = BitBoard.square square
+    let piece = Engine.BitBoard.square square
         masked = blockers .&. mask
         left = masked - shift piece 1
         right = bitReverse64 (bitReverse64 masked - shift (bitReverse64 piece) 1 ) .&. mask

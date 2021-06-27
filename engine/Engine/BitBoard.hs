@@ -1,4 +1,4 @@
-module BitBoard where
+module Engine.BitBoard where
 
 import Data.Word
 import Data.Bits
