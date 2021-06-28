@@ -28,11 +28,7 @@ drawGrid canvas = do
         forM_ [0..7] (\j -> do
             let x = j * tileSize
             let y = i * tileSize
-            if even (floor i +  floor j)
-                then
-                    canvas # set' UI.fillStyle (UI.htmlColor "#dee3e6")
-                else
-                    canvas # set' UI.fillStyle (UI.htmlColor "#8ca2ad")
+            canvas # set' UI.fillStyle (UI.htmlColor $ if even (floor i + floor j) then "#dee3e6" else "#8ca2ad")
             canvas # UI.fillRect (x, y) tileSize tileSize)
         )
 
@@ -45,6 +41,17 @@ draw images pieceRef piecePositionsMapRef canvas = do
 
     piecePositionsMap <- liftIO $ readIORef piecePositionsMapRef
 
+    currentPiece <- liftIO $ readIORef pieceRef
+
+    runMaybeOperation $ do
+        (color, piece, num) <- currentPiece
+        positions <- Map.lookup (color, piece) piecePositionsMap
+        (posX, posY) <- positions !! num
+        return $ do
+            canvas # set' UI.fillStyle selectedTileColor
+            canvas # UI.fillRect (fromIntegral posX * 100, fromIntegral posY * 100)
+                                 tileSize tileSize
+
     forM_ images (\((color, piece), img) -> do
         let maybePositions = Map.lookup (color, piece) piecePositionsMap
         case maybePositions of
@@ -56,17 +63,6 @@ draw images pieceRef piecePositionsMapRef canvas = do
                                     Just (i, j) ->
                                         canvas # UI.drawImage img (fromIntegral i * 100, fromIntegral j * 100))
         )
-
-    currentPiece <- liftIO $ readIORef pieceRef
-
-    runMaybeOperation $ do
-        (color, piece, num) <- currentPiece
-        positions <- Map.lookup (color, piece) piecePositionsMap
-        (posX, posY) <- positions !! num
-        return $ do
-            canvas # set' UI.fillStyle (UI.htmlColor "green")
-            canvas # UI.fillRect (fromIntegral posX * 100, fromIntegral posY * 100)
-                                 indicatorSquareSize indicatorSquareSize
 
 finalizeTurn :: IORef (Maybe (Color, Piece, Int)) -> IORef Color -> IO ()
 finalizeTurn currentPieceRef currentTurnRef = do

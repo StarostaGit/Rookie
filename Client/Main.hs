@@ -33,15 +33,9 @@ setup window = void $ do
     delete    <- UI.button #+ [string "Delete"]
     clear     <- UI.button #+ [string "Clear"]
 
-    out  <- UI.span # set text "Coordinates: "
-    wrap <- UI.div #. "wrap"
-        # set style [("width","300px"),("height","300px"),("border","solid black 1px")]
-        # set (attr "tabindex") "1"
-        #+ [element out]
-
     getBody window #+
         [ column [element canvas]
-        , element startGame, element clear, element wrap
+        , element startGame, element clear
         ]
 
     let images = [UI.loadFile "image/png" "static/staunty/wR.png" >>= \url -> UI.img # set UI.src url]
