@@ -45,6 +45,8 @@ data BoardState = BoardState {
     eval :: Int
 }
 
+-- Board helper functions
+
 initBoard :: BoardState
 initBoard =
     let generateColor = (\ color -> map (startingPositions color) $ range (Pawn, King))
@@ -58,6 +60,22 @@ initBoard =
             ply = 0,
             eval = 0
         }
+
+emptyBoard :: BoardState
+emptyBoard = BoardState {
+        pieces = listArray (White, Black) $ replicate 2 (listArray (Pawn, King) (replicate 6 0)),
+        allPieces = listArray (White, Black) $ replicate 2 0,
+        enPassant = 0,
+        castling = 0,
+        ply = 0,
+        eval = 0
+    }
+
+setPieces :: Array Color (Array Piece BitBoard) -> BoardState -> BoardState
+setPieces ps board = board {
+        pieces = ps,
+        allPieces = listArray (White, Black) $ map (foldl (\ acc (_, bb) -> acc `xor` bb) 0 . assocs . snd) (assocs ps)
+    }
 
 startingPositions :: Color -> Piece -> BitBoard
 startingPositions color piece = sum $ map squareToBB $ getStartingSquares color piece
