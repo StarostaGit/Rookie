@@ -1,0 +1,13 @@
+name:                interfaces
+version:             0.1.0.0
+license:             BSD3
+author:              Piotr Wojtczak
+maintainer:          piotr.m.wojtczak@gmail.com
+build-type:          Simple
+cabal-version:       >=1.10
+
+library
+  default-language:
+      Haskell2010
+  build-depends:
+      base >= 4.7 && < 5
