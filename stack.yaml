@@ -30,7 +30,7 @@ resolver:
 #   - auto-update
 #   - wai
 packages:
-- Engine
+- engine
 - Client
 - Server
 # Dependency packages to be pulled from upstream that are not in the resolver.
