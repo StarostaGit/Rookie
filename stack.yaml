@@ -32,7 +32,7 @@ resolver:
 packages:
 - engine
 - client
-- Server
+- server
 - interfaces
 - common
 # Dependency packages to be pulled from upstream that are not in the resolver.
