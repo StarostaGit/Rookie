@@ -11,8 +11,18 @@ category:            Web
 build-type:          Simple
 cabal-version:       >=1.10
 
-library
+executable rookie-client
+  main-is:
+      Main.hs
   default-language:
       Haskell2010
-  build-depends:       
+  build-depends:
       base >= 4.7 && < 5
+    , threepenny-gui
+    , filepath
+    , containers
+    , tuple
+  other-modules:
+      Paths
+    , Draw
+    , Settings
