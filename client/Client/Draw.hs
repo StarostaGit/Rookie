@@ -6,8 +6,6 @@ import qualified Data.Map as Map
 import Data.IORef
 
 import Common.Types
-
-import Client.Paths
 import Client.Settings
 
 import qualified Graphics.UI.Threepenny as UI
@@ -91,7 +89,7 @@ movePiece currentPiecePositionMaybe clickedPosition currentPieceRef currentTurnR
         let (_, clickedY) = clickedPosition
         return $ if canPromote piece clickedY color then do
                 let maybePositions = Map.lookup (color, Queen) piecePositionsMap
-                let newNum = maybe 0 length maybePositions
+                    newNum = maybe 0 length maybePositions
                 writeIORef positionPieceMapRef  $ Map.insert clickedPosition (color, Queen, newNum)
                                                 $ Map.delete currentPiecePosition positionPieceMap
                 writeIORef piecePositionsMapRef $ Map.adjust (\xs -> xs ++ [Just clickedPosition]) (color, Queen)
@@ -99,7 +97,7 @@ movePiece currentPiecePositionMaybe clickedPosition currentPieceRef currentTurnR
                 finalizeTurn currentPieceRef currentTurnRef
             else if enPassant piece currentPiecePosition clickedPosition then do
                     let deletePos = enPassantDeletePosition currentPiecePosition clickedPosition
-                    let deletePiece = Map.lookup deletePos positionPieceMap
+                        deletePiece = Map.lookup deletePos positionPieceMap
                     writeIORef positionPieceMapRef  $ Map.insert clickedPosition (color, piece, num)
                                                     $ Map.delete currentPiecePosition
                                                     $ Map.delete deletePos positionPieceMap
@@ -135,7 +133,7 @@ takePiece currentPiecePositionMaybe clickedPosition (clickedColor, clickedPiece,
         let (_, clickedY) = clickedPosition
         return $ if canPromote piece clickedY color then do
                 let maybePositions = Map.lookup (color, Queen) piecePositionsMap
-                let newNum = maybe 0 length maybePositions
+                    newNum = maybe 0 length maybePositions
                 writeIORef positionPieceMapRef  $ Map.insert clickedPosition (color, Queen, newNum)
                                                 $ Map.delete currentPiecePosition positionPieceMap
                 writeIORef piecePositionsMapRef $ Map.adjust (\xs -> xs ++ [Just clickedPosition]) (color, Queen)
@@ -159,7 +157,7 @@ handleClick (x, y) currentPieceRef currentTurnRef (positionPieceMapRef, piecePos
     currentTurn       <- liftIO $ readIORef currentTurnRef
 
     let clickedPiece = Map.lookup clickedPosition positionPieceMap
-    let currentPiecePosition = do (color, piece, num) <- currentPiece
+        currentPiecePosition = do (color, piece, num) <- currentPiece
                                   result <- Map.lookup (color, piece) piecePositionsMap
                                   result !! num
 

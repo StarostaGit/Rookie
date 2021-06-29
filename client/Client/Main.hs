@@ -3,10 +3,10 @@ import qualified Data.Map as Map
 import Data.Tuple.Select
 import Data.IORef
 import Data.Bifunctor
+import Data.Array
 
 import Common.Types
 
-import Client.Paths
 import Client.Draw
 import Client.Settings
 
@@ -16,7 +16,6 @@ import Graphics.UI.Threepenny.Core
 
 main :: IO ()
 main = do
-    static <- getStaticDir
     startGUI defaultConfig setup
 
 type PieceFile = ((Color, Piece), UI Element)
@@ -40,23 +39,12 @@ setup window = void $ do
         , element startGame, element clear
         ]
 
-    let images = [UI.loadFile "image/png" "static/staunty/wR.png" >>= \url -> UI.img # set UI.src url]
-    let fileInfos = [((White, Rook),   UI.loadFile "image/png" "static/staunty/wR.png"),
-                     ((Black, Rook),   UI.loadFile "image/png" "static/staunty/bR.png"),
-                     ((White, Knight), UI.loadFile "image/png" "static/staunty/wN.png"),
-                     ((Black, Knight), UI.loadFile "image/png" "static/staunty/bN.png"),
-                     ((White, Bishop), UI.loadFile "image/png" "static/staunty/wB.png"),
-                     ((Black, Bishop), UI.loadFile "image/png" "static/staunty/bB.png"),
-                     ((White, Queen),  UI.loadFile "image/png" "static/staunty/wQ.png"),
-                     ((Black, Queen),  UI.loadFile "image/png" "static/staunty/bQ.png"),
-                     ((White, King),   UI.loadFile "image/png" "static/staunty/wK.png"),
-                     ((Black, King),   UI.loadFile "image/png" "static/staunty/bK.png"),
-                     ((White, Pawn),   UI.loadFile "image/png" "static/staunty/wP.png"),
-                     ((Black, Pawn),   UI.loadFile "image/png" "static/staunty/bP.png")]
+    let fileInfos = [(\x -> (x, loadPieceImage x)) (color, piece) | color <- range (White, Black),
+                                                                    piece <- range (Pawn, King)]
 
     images <- foldl (\acc fileInfo -> do
         let info = sel1 fileInfo
-        let file = sel2 fileInfo
+            file = sel2 fileInfo
         url <- file
         unpackedAcc <- acc
         img <- UI.img # set UI.src url
