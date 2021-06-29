@@ -1,13 +1,88 @@
 module Engine.Moves (
-    getValidMoves, getValidMovesForAll
+    getValidMoves, getValidMovesForAll,
+    Move (..), genMoves, makeMove,
+    toAlgebraicNotation
 ) where
 
 import Data.Array
 import Data.Bits
+import Data.Char
 import Data.Word
+import Control.Monad.State
 import Common.Types
 import Engine.BitBoard
 import Engine.BoardState
+
+-- Move representation
+
+data Move = Move {
+    color :: Color,
+    piece :: Piece,
+    from :: Square,
+    to :: Square,
+    castling :: Int,
+    promotion :: Maybe Piece,
+    isCapture :: Bool,
+    isCheck :: Bool
+} deriving (Show)
+
+genMoves :: BoardState -> [Move]
+genMoves board =
+    let side = sideToMove board
+        pieceList = toSquares $ allPieces board ! side
+    in
+        concatMap (\ sq -> genMovesForPiece board side (case getPieceAt board sq of Just (_, p) -> p) sq) pieceList
+
+genMovesForPiece :: BoardState -> Color -> Piece -> Square -> [Move]
+genMovesForPiece board side p sq = flip map (toSquares (getValidMoves board side p $ (square . fromEnum) sq)) $
+    (\ targetSq -> Move {
+        color = side,
+        piece = p,
+        from = sq,
+        to = targetSq,
+        Engine.Moves.castling = Engine.BoardState.castling board,
+        promotion = Nothing,
+        isCapture = containsAnyPiece board targetSq,
+        isCheck = square (fromEnum targetSq) == pieces board ! opposite side ! King
+    })
+
+makeMove :: Move -> BoardState -> BoardState
+makeMove move board = flip execState board $ do
+    board <- get
+    let oldPieces = pieces board
+        newMovedBB = (oldPieces ! color move ! piece move) `xor` square (fromEnum $ from move) `xor` square (fromEnum $ to move)
+        newMovedArr = (oldPieces ! color move) // [(piece move, newMovedBB)]
+        newPieces = oldPieces // [(color move, newMovedArr)]
+    put $ setPieces newPieces board
+
+    when (isCapture move) $ do
+        let Just (_, captured) = getPieceAt board $ to move
+            newCapturedBB = (newPieces ! opposite (color move) ! captured) `xor` square (fromEnum $ to move)
+            newCapturedArr = (newPieces ! opposite (color move)) // [(captured, newCapturedBB)]
+        put $ setPieces (newPieces // [(opposite (color move), newCapturedArr)]) board
+
+    modify (\ board -> board { sideToMove = opposite $ color move })
+
+    let diff = fromEnum (to move) - fromEnum (from move)
+        dir = if color move == White then 1 else -1
+    if piece move == Pawn && abs diff == 16 then
+        modify (\ board -> board { enPassant = square $ fromEnum (from move) + 8 * dir })
+    else
+        modify (\ board -> board { enPassant = 0 })
+
+toAlgebraicNotation :: Move -> String
+toAlgebraicNotation move =
+    let pieceEncoding = array (Knight, King) [(Knight, "N"), (Bishop, "B"), (Rook, "R"), (Queen, "Q"), (King, "K")]
+        (originFile, originRank) = squareToFileRank $ from move
+        (targetFile, targetRank) = squareToFileRank $ to move
+    in
+        (if piece move == Pawn then (if isCapture move then [toEnum (originFile + ord 'a') :: Char] else "") else pieceEncoding ! piece move) ++
+        (if isCapture move then "x" else "") ++
+        [   toEnum (targetFile + ord 'a') :: Char
+        ,   toEnum (targetRank + ord '1') :: Char] ++
+        (if isCheck move then "+" else "")
+
+-- Legal moves generation
 
 getValidMoves :: BoardState -> Color -> Piece -> BitBoard -> BitBoard
 getValidMoves board color p mask = case p of
@@ -95,8 +170,8 @@ pawnAttacks pawns White =
         leftAttack .|. rightAttack
 
 pawnAttacks pawns Black =
-    let leftAttack = shift (complement (file 0) .&. pawns) (-7)
-        rightAttack = shift (complement (file 7) .&. pawns) (-9)
+    let leftAttack = shift (complement (file 7) .&. pawns) (-7)
+        rightAttack = shift (complement (file 0) .&. pawns) (-9)
     in
         leftAttack .|. rightAttack
 
