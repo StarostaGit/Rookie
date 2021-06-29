@@ -1,5 +1,5 @@
 {-# LANGUAGE CPP#-}
-module Paths (getStaticDir) where
+module Client.Paths (getStaticDir) where
 
 import Control.Monad
 import System.FilePath
@@ -9,12 +9,12 @@ import System.FilePath
 import qualified Paths_threepenny_gui (getDataDir)
 
 getStaticDir :: IO FilePath
-getStaticDir = (</> "Client/static") `liftM` Paths_threepenny_gui.getDataDir
+getStaticDir = (</> "client/static") `liftM` Paths_threepenny_gui.getDataDir
 
 #elif defined(FPCOMPLETE)
 
 getStaticDir :: IO FilePath
-getStaticDir = return "Client/static"
+getStaticDir = return "client/static"
 
 #else
 -- using GHCi
