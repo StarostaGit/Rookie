@@ -24,6 +24,8 @@ executable rookie-client
     , containers
     , tuple
     , array
+    , interfaces
   other-modules:
       Client.Draw
     , Client.Settings
+    , Client.GameInfo
