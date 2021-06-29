@@ -1,5 +1,5 @@
 module Interfaces.Notation (
-    parseFEN
+    parseFEN, FEN, pieceAsFEN
 ) where
 
 import Data.String
@@ -23,7 +23,7 @@ parseFEN fen =
                 ranks = concat $ reverse $ splitOn "/" position
             foldl (\ acc p -> acc >>= flip parseSquare p) (return 0) ranks
             modify (\ board -> board { castling = parseCastling castling })
-            modify (\ board -> board { enPassant = if ep == "-" then 0 
+            modify (\ board -> board { enPassant = if ep == "-" then 0
                                                    else square $ (ord (head ep) - ord 'a') + 8 * (ord (ep !! 1) - ord '1') })
             modify (\ board -> board { sideToMove = if side == "w" then White else Black })
     in
@@ -69,6 +69,18 @@ pieceMap = Map.fromList [
         ('n', (Black, Knight)),
         ('r', (Black, Rook))
     ]
+
+pieceAsFEN :: (Color, Piece) -> Char
+pieceAsFEN (color, piece) =
+    let char = case piece of
+            Pawn   -> 'p'
+            Knight -> 'n'
+            Bishop -> 'b'
+            Rook   -> 'r'
+            Queen  -> 'q'
+            King   -> 'k'
+    in
+        if color == White then toUpper char else char
 
 isPiece :: Char -> Bool
 isPiece p = p `elem` Map.keys pieceMap

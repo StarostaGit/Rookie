@@ -8,6 +8,7 @@ import Data.Maybe
 
 import Common.Types
 import Client.Settings
+import Client.Convert
 import Client.GameInfo
 
 import qualified Graphics.UI.Threepenny as UI
@@ -40,6 +41,15 @@ draw images gameInfoRef canvas = do
         return $ do
             canvas # UI.fillRect (fromIntegral posX * 100, fromIntegral posY * 100)
                                  tileSize tileSize
+
+    forM_ (legalMoves (currentPiece gameInfo) $ piecePositionsMap gameInfo)
+          (\(x, y) -> do
+              canvas # UI.beginPath
+              canvas # UI.arc (fromIntegral x * 100 + tileSize / 2, fromIntegral y * 100 + tileSize / 2)
+                              legalMoveIndicatorSize 0 (2 * pi)
+              canvas # UI.stroke
+              canvas # UI.fill
+              canvas # UI.closePath)
 
     forM_ images (\((color, piece), img) -> do
         let maybePositions = Map.lookup (color, piece) $ piecePositionsMap gameInfo
@@ -187,4 +197,12 @@ deleteNth :: Int -> [a] -> [a]
 deleteNth n xs =
     let (left, _:right) = splitAt n xs
     in  left ++ right
+
+legalMoves :: Maybe (Color, Piece, Int) -> Map.Map (Color, Piece) [Maybe Position] -> [Position]
+legalMoves currentPieceMaybe piecePositionsMap =
+    fromMaybe [] $ do
+        (color, piece, num) <- currentPieceMaybe
+        positions <- Map.lookup (color, piece) piecePositionsMap
+        (x, y) <- positions !! num
+        return $ if color == White then [(x, y - 1)] else [(x, y + 1)]
 
