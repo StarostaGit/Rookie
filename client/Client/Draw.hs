@@ -10,6 +10,8 @@ import Common.Types
 import Client.Settings
 import Client.Convert
 import Client.GameInfo
+import Interfaces.LegalMoves
+import Interfaces.Notation
 
 import qualified Graphics.UI.Threepenny as UI
 import Graphics.UI.Threepenny.Core
@@ -42,7 +44,7 @@ draw images gameInfoRef canvas = do
             canvas # UI.fillRect (fromIntegral posX * 100, fromIntegral posY * 100)
                                  tileSize tileSize
 
-    forM_ (legalMoves (currentPiece gameInfo) $ piecePositionsMap gameInfo)
+    forM_ (legalMoves gameInfo)
           (\(x, y) -> do
               canvas # UI.beginPath
               canvas # UI.arc (fromIntegral x * 100 + tileSize / 2, fromIntegral y * 100 + tileSize / 2)
@@ -67,10 +69,6 @@ canPromote :: Piece -> Int -> Color -> Bool
 canPromote piece posY color =
     piece == Pawn && ((posY == 0 && color == White)  || (posY == 7 && color == Black))
 
-isEnPassant :: Piece -> Position -> Position -> Bool
-isEnPassant piece (oldX, oldY) (newX, newY) =
-    (piece == Pawn) && (oldX /= newX)
-
 enPassantDeletePosition :: Position -> Position -> Position
 enPassantDeletePosition (oldX, oldY) (newX, newY) =
     (newX, oldY)
@@ -78,6 +76,12 @@ enPassantDeletePosition (oldX, oldY) (newX, newY) =
 movePiece :: Maybe Position -> Position -> IORef GameInfo -> IO ()
 movePiece currentPiecePositionMaybe clickedPosition gameInfoRef = do
     gameInfo <- readIORef gameInfoRef
+
+    -- being inside function `movePiece`, we assume that current piece is moved to a free square
+    let isEnPassant :: Piece -> Position -> Position -> Bool
+        isEnPassant piece (oldX, oldY) (newX, newY) =
+            (piece == Pawn) && (oldX /= newX)
+
 
     runMaybeOperation $ do
         currentPiecePosition <- currentPiecePositionMaybe
@@ -198,11 +202,13 @@ deleteNth n xs =
     let (left, _:right) = splitAt n xs
     in  left ++ right
 
-legalMoves :: Maybe (Color, Piece, Int) -> Map.Map (Color, Piece) [Maybe Position] -> [Position]
-legalMoves currentPieceMaybe piecePositionsMap =
+legalMoves :: GameInfo -> [Position]
+legalMoves gameInfo =
     fromMaybe [] $ do
-        (color, piece, num) <- currentPieceMaybe
-        positions <- Map.lookup (color, piece) piecePositionsMap
+        (color, piece, num) <- currentPiece gameInfo
+        positions <- Map.lookup (color, piece) $ piecePositionsMap gameInfo
         (x, y) <- positions !! num
-        return $ if color == White then [(x, y - 1)] else [(x, y + 1)]
-
+        let square :: Square
+            square = toEnum $ (7 - y) * 8 + x
+            squareList = getLegalMoves (parseFEN $ gameInfoToFEN gameInfo) square
+        return $ map (\s -> (fromEnum s `mod` 8, 7 - (fromEnum s `div` 8))) squareList

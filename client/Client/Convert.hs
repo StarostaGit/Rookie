@@ -28,7 +28,7 @@ gameInfoToFEN gameInfo =
                 map toUpper whiteCastling ++ blackCastling
         enPassantTarget = case enPassant gameInfo of
             Nothing -> "-"
-            Just (x, y) -> [(['a'..] !! x)] ++ (show (8 - y))
+            Just (x, y) -> [toEnum $ fromEnum 'a' + x] ++ (show (8 - y))
     in
         intercalate " " [currentPositionToFEN gameInfo, activeColor, castlingAvailibility, enPassantTarget,
                          show $ halfMove gameInfo, show $ fullMove gameInfo]
@@ -36,7 +36,7 @@ gameInfoToFEN gameInfo =
 currentPositionToFEN :: GameInfo -> String
 currentPositionToFEN gameInfo = intercalate "/" $
     let mergeNumbers :: String -> String
-        mergeNumbers row = concat $ map (\xs -> if head xs == '0' then show $ length xs else xs) $ group row
+        mergeNumbers row = concatMap (\xs -> if head xs == '0' then show $ length xs else xs) $ group row
     in
         map (\y -> mergeNumbers $ concatMap
                 (\x ->
