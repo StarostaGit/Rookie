@@ -5,6 +5,7 @@ module Engine.Moves (
 import Data.Array
 import Data.Bits
 import Data.Word
+import Common.Types
 import Engine.BitBoard
 import Engine.BoardState
 

@@ -19,6 +19,7 @@ executable rookie-client
   build-depends:
       base >= 4.7 && < 5
     , threepenny-gui
+    , common
     , filepath
     , containers
     , tuple
