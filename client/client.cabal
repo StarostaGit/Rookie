@@ -23,7 +23,7 @@ executable rookie-client
     , filepath
     , containers
     , tuple
+    , array
   other-modules:
-      Client.Paths
-    , Client.Draw
+      Client.Draw
     , Client.Settings
