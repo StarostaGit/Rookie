@@ -22,6 +22,7 @@ data BoardState = BoardState {
     allPieces :: Array Color BitBoard,
     enPassant :: BitBoard,
     castling :: Int, -- k q K Q
+    sideToMove :: Color,
     ply :: Int,
     eval :: Int
 }
@@ -38,6 +39,7 @@ initBoard =
             allPieces = listArray (White, Black) $ map sum pieceList,
             enPassant = 0,
             castling = castlingRight White King .|. castlingRight White Queen .|. castlingRight Black King .|. castlingRight Black Queen,
+            sideToMove = White,
             ply = 0,
             eval = 0
         }
@@ -48,6 +50,7 @@ emptyBoard = BoardState {
         allPieces = listArray (White, Black) $ replicate 2 0,
         enPassant = 0,
         castling = 0,
+        sideToMove = White,
         ply = 0,
         eval = 0
     }
@@ -86,12 +89,15 @@ squareToFileRank sq = (fileOf $ fromEnum sq, rankOf $ fromEnum sq)
 -- Piece helper functions
 
 containsPiece :: BoardState -> Square -> Color -> Piece -> Bool
-containsPiece state square color piece = testBit (pieces state ! color ! piece) $ fromEnum square
+containsPiece board square color piece = testBit (pieces board ! color ! piece) $ fromEnum square
+
+containsAnyPiece :: BoardState -> Square -> Bool
+containsAnyPiece board square = testBit (allPieces board ! White `xor` allPieces board ! Black) $ fromEnum square
 
 getPieceAt :: BoardState -> Square -> Maybe (Color, Piece)
-getPieceAt state square =
-    let white = map (\ p -> if containsPiece state square White p then Just (White, p) else Nothing) $ range (Pawn, King)
-        black = map (\ p -> if containsPiece state square Black p then Just (Black, p) else Nothing) $ range (Pawn, King)
+getPieceAt board square =
+    let white = map (\ p -> if containsPiece board square White p then Just (White, p) else Nothing) $ range (Pawn, King)
+        black = map (\ p -> if containsPiece board square Black p then Just (Black, p) else Nothing) $ range (Pawn, King)
         filtered = filter (/= Nothing) $ white ++ black
     in
         case filtered of

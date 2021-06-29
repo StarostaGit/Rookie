@@ -25,6 +25,7 @@ parseFEN fen =
             modify (\ board -> board { castling = parseCastling castling })
             modify (\ board -> board { enPassant = if ep == "-" then 0 
                                                    else square $ (ord (head ep) - ord 'a') + 8 * (ord (ep !! 1) - ord '1') })
+            modify (\ board -> board { sideToMove = if side == "w" then White else Black })
     in
         execState (parse fen) emptyBoard
 
