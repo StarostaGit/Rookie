@@ -9,6 +9,7 @@ import Data.List.Split
 import Data.Bits
 import Control.Monad.State
 import qualified Data.Map as Map
+import Common.Types
 import Engine.BitBoard
 import Engine.BoardState
 

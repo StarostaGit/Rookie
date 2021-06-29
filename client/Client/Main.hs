@@ -4,6 +4,8 @@ import Data.Tuple.Select
 import Data.IORef
 import Data.Bifunctor
 
+import Common.Types
+
 import Client.Paths
 import Client.Draw
 import Client.Settings

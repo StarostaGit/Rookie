@@ -5,6 +5,8 @@ import Control.Monad
 import qualified Data.Map as Map
 import Data.IORef
 
+import Common.Types
+
 import Client.Paths
 import Client.Settings
 
@@ -13,12 +15,6 @@ import Graphics.UI.Threepenny.Core
 
 
 type Position = (Int, Int)
-
-data Color = White | Black
-    deriving (Eq, Ord)
-
-data Piece = Rook | Knight | Bishop | Queen | King | Pawn
-    deriving (Eq, Ord)
 
 type MapRefs = (IORef (Map.Map Position (Color, Piece, Int)), IORef (Map.Map (Color, Piece) [Maybe Position]))
 
