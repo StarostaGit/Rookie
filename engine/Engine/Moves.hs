@@ -1,10 +1,24 @@
-module Engine.Moves where
+module Engine.Moves (
+    getValidMoves, getValidMovesForAll
+) where
 
 import Data.Array
 import Data.Bits
 import Data.Word
 import Engine.BitBoard
 import Engine.BoardState
+
+getValidMoves :: BoardState -> Color -> Piece -> BitBoard -> BitBoard
+getValidMoves board color p mask = case p of
+    Pawn      -> pawnMovesValid board color mask
+    Knight    -> knightMovesValid board color mask
+    Bishop    -> bishopMovesValid board color mask
+    Rook      -> rookMovesValid board color mask
+    Queen     -> queenMovesValid board color mask
+    King      -> kingMovesValid board color mask
+
+getValidMovesForAll :: BoardState -> Color -> Piece -> BitBoard
+getValidMovesForAll board color p = getValidMoves board color p full
 
 -- King
 
@@ -26,9 +40,9 @@ kingMoves =
 genKingMoves :: BitBoard -> BitBoard -> BitBoard
 genKingMoves kings ourPieces = complement ourPieces .&. foldl (.|.) empty (map (\ (mask, toShift) -> shift (mask .&. kings) toShift) kingMoves)
 
-kingMovesValid :: BoardState -> Color -> BitBoard
-kingMovesValid state color =
-    let kings = pieces state ! color ! King
+kingMovesValid :: BoardState -> Color -> BitBoard -> BitBoard
+kingMovesValid state color mask =
+    let kings = (.&.) mask (pieces state ! color ! King)
         ourPieces = allPieces state ! color
     in
         genKingMoves kings ourPieces
@@ -55,9 +69,9 @@ knightMoves =
 genKnightMoves :: BitBoard -> BitBoard -> BitBoard
 genKnightMoves knights ourPieces = complement ourPieces .&. foldl (.|.) empty (map (\ (mask, toShift) -> shift (mask .&. knights) toShift) knightMoves)
 
-knightMovesValid :: BoardState -> Color -> BitBoard
-knightMovesValid state color =
-    let knights = pieces state ! color ! Knight
+knightMovesValid :: BoardState -> Color -> BitBoard -> BitBoard
+knightMovesValid state color mask =
+    let knights = (.&.) mask (pieces state ! color ! Knight)
         ourPieces = allPieces state ! color
     in
         genKnightMoves knights ourPieces
@@ -94,9 +108,9 @@ genPawnMoves color pawns ourPieces theirPieces =
     in
         (oneStep .|. twoSteps) .|. attacks
 
-pawnMovesValid :: BoardState -> Color -> BitBoard
-pawnMovesValid state color =
-    let pawns = pieces state ! color ! Pawn
+pawnMovesValid :: BoardState -> Color -> BitBoard -> BitBoard
+pawnMovesValid state color mask =
+    let pawns = (.&.) mask (pieces state ! color ! Pawn)
         ourPieces = allPieces state ! color
         theirPieces = allPieces state ! opposite color
         epSquare = enPassant state
@@ -121,9 +135,9 @@ genBishopMoves bishops ourPieces theirPieces =
     in
         complement ourPieces .&. foldl (\acc sq -> acc .|. genSingleBishopMoveset sq all) empty squares
 
-bishopMovesValid :: BoardState -> Color -> BitBoard
-bishopMovesValid state color =
-    let bishops = pieces state ! color ! Bishop
+bishopMovesValid :: BoardState -> Color -> BitBoard -> BitBoard
+bishopMovesValid state color mask =
+    let bishops = (.&.) mask (pieces state ! color ! Bishop)
         ourPieces = allPieces state ! color
         theirPieces = allPieces state ! opposite color
     in
@@ -148,9 +162,9 @@ genRookMoves rooks ourPieces theirPieces =
         complement ourPieces .&. foldl (\acc sq -> acc .|. genSingleRookMoveset sq all) empty squares
 
 
-rookMovesValid :: BoardState -> Color -> BitBoard
-rookMovesValid state color =
-    let rooks = pieces state ! color ! Rook
+rookMovesValid :: BoardState -> Color -> BitBoard -> BitBoard
+rookMovesValid state color mask =
+    let rooks = (.&.) mask (pieces state ! color ! Rook)
         ourPieces = allPieces state ! color
         theirPieces = allPieces state ! opposite color
     in
@@ -161,9 +175,9 @@ rookMovesValid state color =
 genQueenMoves :: BitBoard -> BitBoard -> BitBoard -> BitBoard
 genQueenMoves queens ourPieces theirPieces = genBishopMoves queens ourPieces theirPieces .|. genRookMoves queens ourPieces theirPieces
 
-queenMovesValid :: BoardState -> Color -> BitBoard
-queenMovesValid state color =
-    let queens = pieces state ! color ! Queen
+queenMovesValid :: BoardState -> Color -> BitBoard -> BitBoard
+queenMovesValid state color mask =
+    let queens = (.&.) mask (pieces state ! color ! Queen)
         ourPieces = allPieces state ! color
         theirPieces = allPieces state ! color
     in
