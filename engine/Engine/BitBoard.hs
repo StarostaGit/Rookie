@@ -2,6 +2,7 @@ module Engine.BitBoard where
 
 import Data.Word
 import Data.Bits
+import Common.Types
 
 type BitBoard = Word64
 
@@ -49,6 +50,20 @@ full = complement empty
 
 isEmpty :: BitBoard -> Bool 
 isEmpty = (==) 0
+
+toSquares :: BitBoard -> [Square]
+toSquares bb =
+    if isEmpty bb then
+        []
+    else
+        let sq = countTrailingZeros bb in
+            toEnum sq : toSquares (bb `xor` square sq)
+
+fromSquares :: [Square] -> BitBoard
+fromSquares squares = foldl xor 0 $ map (square . fromEnum) squares
+
+fromSquare :: Square -> BitBoard
+fromSquare sq = fromSquares [sq]
 
 -- Pretty Printing
 pprint :: BitBoard -> String

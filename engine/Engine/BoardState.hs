@@ -59,7 +59,7 @@ setPieces ps board = board {
     }
 
 startingPositions :: Color -> Piece -> BitBoard
-startingPositions color piece = sum $ map squareToBB $ getStartingSquares color piece
+startingPositions color piece = sum $ map fromSquare $ getStartingSquares color piece
 
 getStartingSquares :: Color -> Piece -> [Square]
 getStartingSquares color piece = case color of
@@ -82,12 +82,6 @@ getStartingSquares color piece = case color of
 
 squareToFileRank :: Square -> (Int, Int)
 squareToFileRank sq = (fileOf $ fromEnum sq, rankOf $ fromEnum sq)
-
-squareToBB :: Square -> BitBoard
-squareToBB sq = square $ fromEnum sq
-
-genBitBoardFromSquares :: [Square] -> BitBoard
-genBitBoardFromSquares squares = foldl xor 0 $ map (square . fromEnum) squares
 
 -- Piece helper functions
 
