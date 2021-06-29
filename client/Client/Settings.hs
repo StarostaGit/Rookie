@@ -29,3 +29,6 @@ loadPieceImage (color, piece) =
                         Pawn   -> "P"
     in
         UI.loadFile "image/png" $ "client/static/staunty" </> (colorName ++ pieceName) <.> ".png"
+
+legalMoveIndicatorSize :: Double
+legalMoveIndicatorSize = 15

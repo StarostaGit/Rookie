@@ -28,4 +28,5 @@ executable rookie-client
   other-modules:
       Client.Draw
     , Client.Settings
+    , Client.Convert
     , Client.GameInfo
