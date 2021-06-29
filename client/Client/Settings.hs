@@ -1,4 +1,4 @@
-module Settings where
+module Client.Settings where
 
 import qualified Graphics.UI.Threepenny as UI
 

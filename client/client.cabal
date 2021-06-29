@@ -1,4 +1,4 @@
-name:                Client
+name:                client
 version:             0.1.0.0
 -- synopsis:
 -- description:
@@ -13,7 +13,7 @@ cabal-version:       >=1.10
 
 executable rookie-client
   main-is:
-      Main.hs
+      Client/Main.hs
   default-language:
       Haskell2010
   build-depends:
@@ -23,6 +23,6 @@ executable rookie-client
     , containers
     , tuple
   other-modules:
-      Paths
-    , Draw
-    , Settings
+      Client.Paths
+    , Client.Draw
+    , Client.Settings

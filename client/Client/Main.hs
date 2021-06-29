@@ -4,9 +4,9 @@ import Data.Tuple.Select
 import Data.IORef
 import Data.Bifunctor
 
-import Paths
-import Draw
-import Settings
+import Client.Paths
+import Client.Draw
+import Client.Settings
 
 import qualified Graphics.UI.Threepenny as UI
 import Graphics.UI.Threepenny.Core

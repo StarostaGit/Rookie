@@ -1,12 +1,12 @@
 {-# LANGUAGE LambdaCase #-}
-module Draw (draw, drawGrid, handleClick, Color(..), Piece(..), Position) where
+module Client.Draw (draw, drawGrid, handleClick, Color(..), Piece(..), Position) where
 
 import Control.Monad
 import qualified Data.Map as Map
 import Data.IORef
 
-import Paths
-import Settings
+import Client.Paths
+import Client.Settings
 
 import qualified Graphics.UI.Threepenny as UI
 import Graphics.UI.Threepenny.Core
