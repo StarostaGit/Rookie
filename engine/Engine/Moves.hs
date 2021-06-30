@@ -24,7 +24,7 @@ data Move = Move {
     promotion :: Maybe Piece,
     isCapture :: Bool,
     isCheck :: Bool
-} deriving (Show)
+} deriving (Eq, Ord, Show)
 
 genMoves :: BoardState -> [Move]
 genMoves board =
@@ -255,7 +255,7 @@ queenMovesValid :: BoardState -> Color -> BitBoard -> BitBoard
 queenMovesValid state color mask =
     let queens = (.&.) mask (pieces state ! color ! Queen)
         ourPieces = allPieces state ! color
-        theirPieces = allPieces state ! color
+        theirPieces = allPieces state ! opposite color
     in
         genQueenMoves queens ourPieces theirPieces
 
