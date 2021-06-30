@@ -177,11 +177,12 @@ handleClick (x, y) gameInfoRef canvas = do
                                   result <- Map.lookup (color, piece) $ piecePositionsMap gameInfo
                                   result !! num
 
+    let isLegal = clickedPosition `elem` legalMoves gameInfo
     liftIO $ case clickedPiece of
         Nothing ->
-            movePiece currentPiecePosition clickedPosition gameInfoRef
+            when isLegal $ movePiece currentPiecePosition clickedPosition gameInfoRef
         Just (clickedColor, clickedPiece, clickedNum) | clickedColor /= turn gameInfo ->
-            takePiece currentPiecePosition clickedPosition (clickedColor, clickedPiece, clickedNum) gameInfoRef
+            when isLegal $ takePiece currentPiecePosition clickedPosition (clickedColor, clickedPiece, clickedNum) gameInfoRef
         Just (color, piece, num) | color == turn gameInfo ->
             writeIORef gameInfoRef $ gameInfo { currentPiece = Just (color, piece, num) }
         _ ->
