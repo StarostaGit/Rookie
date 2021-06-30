@@ -68,6 +68,6 @@ setup socket window = void $ do
         canvas # UI.clearCanvas
 
     on UI.mousedown canvas $ \xy -> do
-        canvas # UI.clearCanvas
         canvas # handleClick xy gameInfoRef socket
+        canvas # UI.clearCanvas
         canvas # draw images gameInfoRef
