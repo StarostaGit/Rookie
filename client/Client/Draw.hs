@@ -49,13 +49,32 @@ draw images gameInfoRef canvas = do
                                  tileSize tileSize
 
     forM_ (legalMoves gameInfo)
-          (\(x, y) -> do
-              canvas # UI.beginPath
-              canvas # UI.arc (fromIntegral x * 100 + tileSize / 2, fromIntegral y * 100 + tileSize / 2)
-                              legalMoveIndicatorSize 0 (2 * pi)
-              canvas # UI.stroke
-              canvas # UI.fill
-              canvas # UI.closePath)
+          (\(x, y) ->
+              case Map.lookup (x, y) $ board gameInfo of
+                  Nothing -> do
+                      canvas # set' UI.fillStyle selectedTileColor
+                      canvas # UI.beginPath
+                      canvas # UI.arc (fromIntegral x * 100 + tileSize / 2, fromIntegral y * 100 + tileSize / 2)
+                                      legalMoveIndicatorSize 0 (2 * pi)
+                      canvas # set' UI.lineWidth 1
+                      canvas # UI.stroke
+                      canvas # UI.fill
+                      canvas # UI.closePath
+                  Just _ -> do
+                      let posX = fromIntegral x * 100
+                          posY = fromIntegral y * 100
+                      canvas # set' UI.strokeStyle "green"
+                      canvas # UI.beginPath
+                      canvas # UI.moveTo (posX, posY)
+                      canvas # UI.lineTo (posX + tileSize, posY)
+                      canvas # UI.lineTo (posX + tileSize, posY + tileSize)
+                      canvas # UI.lineTo (posX, posY + tileSize)
+                      canvas # UI.lineTo (posX, posY)
+                      canvas # set' UI.lineWidth 4
+                      canvas # UI.stroke
+                      canvas # UI.closePath
+          )
+
 
     forM_ images (\((color, piece), img) -> do
         let maybePositions = Map.lookup (color, piece) $ piecePositionsMap gameInfo
