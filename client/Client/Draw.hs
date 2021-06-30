@@ -109,8 +109,9 @@ movePiece currentPiecePositionMaybe clickedPosition gameInfoRef = do
     runMaybeOperation $ do
         currentPiecePosition <- currentPiecePositionMaybe
         (color, piece, num)  <- currentPiece gameInfo
-        let (_, clickedY) = clickedPosition
-        return $ if canPromote piece clickedY color then do
+        let (oldX, oldY) = currentPiecePosition
+            (newX, newY) = clickedPosition
+        return $ if canPromote piece newY color then do
             let maybePositions = Map.lookup (color, Queen) $ piecePositionsMap gameInfo
                 newNum = maybe 0 length maybePositions
                 newBoard = Map.insert clickedPosition (color, Queen, newNum) $
@@ -121,7 +122,8 @@ movePiece currentPiecePositionMaybe clickedPosition gameInfoRef = do
                 board = newBoard,
                 piecePositionsMap = newPiecePositionsMap,
                 currentPiece = Nothing,
-                turn = opposite color
+                turn = opposite color,
+                enPassant = Nothing
             }
         else if isEnPassant piece currentPiecePosition clickedPosition then do
             let deletePos = enPassantDeletePosition currentPiecePosition clickedPosition
@@ -140,18 +142,26 @@ movePiece currentPiecePositionMaybe clickedPosition gameInfoRef = do
                 board = newBoard,
                 piecePositionsMap = newPiecePositionsMap,
                 currentPiece = Nothing,
-                turn = opposite color
+                turn = opposite color,
+                enPassant = Nothing
             }
         else do
             let newBoard = Map.insert clickedPosition (color, piece, num) $
                            Map.delete currentPiecePosition $ board gameInfo
                 newPiecePositionsMap = Map.adjust (replaceNth num $ Just clickedPosition) (color, piece) $
                                                   piecePositionsMap gameInfo
+                (_, oldY) = currentPiecePosition
+                enPassantValue = if piece == Pawn && abs (newY - oldY) == 2 then
+                        let direction = if newY > oldY then -1 else 1
+                        in
+                            Just (newX, newY + direction)
+                    else Nothing
             writeIORef gameInfoRef $ gameInfo {
                 board = newBoard,
                 piecePositionsMap = newPiecePositionsMap,
                 currentPiece = Nothing,
-                turn = opposite color
+                turn = opposite color,
+                enPassant = enPassantValue
             }
 
 takePiece :: Maybe Position -> Position -> (Color, Piece, Int) -> IORef GameInfo -> IO ()
@@ -175,7 +185,8 @@ takePiece currentPiecePositionMaybe clickedPosition (clickedColor, clickedPiece,
                 board = newBoard,
                 piecePositionsMap = newPiecePositionsMap,
                 currentPiece = Nothing,
-                turn = opposite color
+                turn = opposite color,
+                enPassant = Nothing
             }
         else do
             let newBoard = Map.insert clickedPosition (color, piece, num) $
@@ -187,7 +198,8 @@ takePiece currentPiecePositionMaybe clickedPosition (clickedColor, clickedPiece,
                 board = newBoard,
                 piecePositionsMap = newPiecePositionsMap,
                 currentPiece = Nothing,
-                turn = opposite color
+                turn = opposite color,
+                enPassant = Nothing
             }
 
 handleClick :: (Double, Double) -> IORef GameInfo -> Socket -> UI.Canvas -> UI ()
