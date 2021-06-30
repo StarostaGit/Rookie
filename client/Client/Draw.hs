@@ -88,48 +88,48 @@ movePiece currentPiecePositionMaybe clickedPosition gameInfoRef = do
         (color, piece, num)  <- currentPiece gameInfo
         let (_, clickedY) = clickedPosition
         return $ if canPromote piece clickedY color then do
-                let maybePositions = Map.lookup (color, Queen) $ piecePositionsMap gameInfo
-                    newNum = maybe 0 length maybePositions
-                    newBoard = Map.insert clickedPosition (color, Queen, newNum) $
-                               Map.delete currentPiecePosition $ board gameInfo
-                    newPiecePositionsMap = Map.adjust (\xs -> xs ++ [Just clickedPosition]) (color, Queen) $
-                                            Map.adjust (replaceNth num Nothing) (color, piece) $ piecePositionsMap gameInfo
-                writeIORef gameInfoRef $ gameInfo {
-                                                    board = newBoard,
-                                                    piecePositionsMap = newPiecePositionsMap,
-                                                    currentPiece = Nothing,
-                                                    turn = opposite color
-                                                  }
-            else if isEnPassant piece currentPiecePosition clickedPosition then do
-                    let deletePos = enPassantDeletePosition currentPiecePosition clickedPosition
-                        deletePiece = Map.lookup deletePos $ board gameInfo
-                        newBoard = Map.insert clickedPosition (color, piece, num) $
-                                   Map.delete currentPiecePosition $
-                                   Map.delete deletePos $ board gameInfo
-                        newPiecePositionsMap = case deletePiece of
-                            Nothing ->
-                                Map.adjust (replaceNth num $ Just clickedPosition) (color, piece) $ piecePositionsMap gameInfo
-                            Just (deleteColor, deletePiece, deleteNum) ->
-                                Map.adjust (replaceNth num $ Just clickedPosition) (color, piece) $
-                                Map.adjust (replaceNth deleteNum Nothing) (deleteColor, deletePiece) $
-                                           piecePositionsMap gameInfo
-                    writeIORef gameInfoRef $ gameInfo {
-                                                        board = newBoard,
-                                                        piecePositionsMap = newPiecePositionsMap,
-                                                        currentPiece = Nothing,
-                                                        turn = opposite color
-                                                      }
-                else do
-                    let newBoard = Map.insert clickedPosition (color, piece, num) $
-                                   Map.delete currentPiecePosition $ board gameInfo
-                        newPiecePositionsMap = Map.adjust (replaceNth num $ Just clickedPosition) (color, piece) $
-                                                          piecePositionsMap gameInfo
-                    writeIORef gameInfoRef $ gameInfo {
-                                                        board = newBoard,
-                                                        piecePositionsMap = newPiecePositionsMap,
-                                                        currentPiece = Nothing,
-                                                        turn = opposite color
-                                                      }
+            let maybePositions = Map.lookup (color, Queen) $ piecePositionsMap gameInfo
+                newNum = maybe 0 length maybePositions
+                newBoard = Map.insert clickedPosition (color, Queen, newNum) $
+                           Map.delete currentPiecePosition $ board gameInfo
+                newPiecePositionsMap = Map.adjust (\xs -> xs ++ [Just clickedPosition]) (color, Queen) $
+                                       Map.adjust (replaceNth num Nothing) (color, piece) $ piecePositionsMap gameInfo
+            writeIORef gameInfoRef $ gameInfo {
+                board = newBoard,
+                piecePositionsMap = newPiecePositionsMap,
+                currentPiece = Nothing,
+                turn = opposite color
+            }
+        else if isEnPassant piece currentPiecePosition clickedPosition then do
+            let deletePos = enPassantDeletePosition currentPiecePosition clickedPosition
+                deletePiece = Map.lookup deletePos $ board gameInfo
+                newBoard = Map.insert clickedPosition (color, piece, num) $
+                           Map.delete currentPiecePosition $
+                           Map.delete deletePos $ board gameInfo
+                newPiecePositionsMap = case deletePiece of
+                    Nothing ->
+                        Map.adjust (replaceNth num $ Just clickedPosition) (color, piece) $ piecePositionsMap gameInfo
+                    Just (deleteColor, deletePiece, deleteNum) ->
+                        Map.adjust (replaceNth num $ Just clickedPosition) (color, piece) $
+                        Map.adjust (replaceNth deleteNum Nothing) (deleteColor, deletePiece) $
+                                   piecePositionsMap gameInfo
+            writeIORef gameInfoRef $ gameInfo {
+                board = newBoard,
+                piecePositionsMap = newPiecePositionsMap,
+                currentPiece = Nothing,
+                turn = opposite color
+            }
+        else do
+            let newBoard = Map.insert clickedPosition (color, piece, num) $
+                           Map.delete currentPiecePosition $ board gameInfo
+                newPiecePositionsMap = Map.adjust (replaceNth num $ Just clickedPosition) (color, piece) $
+                                                  piecePositionsMap gameInfo
+            writeIORef gameInfoRef $ gameInfo {
+                board = newBoard,
+                piecePositionsMap = newPiecePositionsMap,
+                currentPiece = Nothing,
+                turn = opposite color
+            }
 
 takePiece :: Maybe Position -> Position -> (Color, Piece, Int) -> IORef GameInfo -> IO ()
 takePiece currentPiecePositionMaybe clickedPosition (clickedColor, clickedPiece, clickedNum) gameInfoRef = do
