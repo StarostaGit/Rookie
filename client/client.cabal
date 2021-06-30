@@ -25,6 +25,10 @@ executable rookie-client
     , tuple
     , array
     , interfaces
+    , network >= 3.1.2.2
+    , network-run
+    , bytestring
+    , engine
   other-modules:
       Client.Draw
     , Client.Settings

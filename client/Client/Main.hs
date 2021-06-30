@@ -13,15 +13,21 @@ import Client.GameInfo
 import qualified Graphics.UI.Threepenny as UI
 import Graphics.UI.Threepenny.Core
 
+import qualified Data.ByteString.Char8 as C
+import Network.Socket
+import Network.Socket.ByteString (recv, sendAll)
+import Network.Run.TCP
+
 
 main :: IO ()
 main = do
-    startGUI defaultConfig setup
+    runTCPClient "127.0.0.1" "3000" $ \s -> do
+        startGUI defaultConfig $ setup s
 
 type PieceFile = ((Color, Piece), UI Element)
 
-setup :: Window -> UI ()
-setup window = void $ do
+setup :: Socket -> Window -> UI ()
+setup socket window = void $ do
     return window # set title "Rookie"
 
     -- initialize board
@@ -63,5 +69,5 @@ setup window = void $ do
 
     on UI.mousedown canvas $ \xy -> do
         canvas # UI.clearCanvas
-        canvas # handleClick xy gameInfoRef
+        canvas # handleClick xy gameInfoRef socket
         canvas # draw images gameInfoRef
