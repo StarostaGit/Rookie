@@ -16,6 +16,10 @@ import Interfaces.Notation
 import qualified Graphics.UI.Threepenny as UI
 import Graphics.UI.Threepenny.Core
 
+import Network.Socket
+import qualified Data.ByteString.Char8 as C
+import Network.Socket.ByteString (recv, sendAll)
+
 
 drawGrid :: UI.Canvas -> UI ()
 drawGrid canvas = do
@@ -167,8 +171,8 @@ takePiece currentPiecePositionMaybe clickedPosition (clickedColor, clickedPiece,
                 turn = opposite color
             }
 
-handleClick :: (Double, Double) -> IORef GameInfo -> UI.Canvas -> UI ()
-handleClick (x, y) gameInfoRef canvas = do
+handleClick :: (Double, Double) -> IORef GameInfo -> Socket -> UI.Canvas -> UI ()
+handleClick (x, y) gameInfoRef socket canvas = do
     let clickedPosition = (floor (x / 100), floor (y / 100))
     gameInfo <- liftIO $ readIORef gameInfoRef
 
@@ -177,12 +181,31 @@ handleClick (x, y) gameInfoRef canvas = do
                                   result <- Map.lookup (color, piece) $ piecePositionsMap gameInfo
                                   result !! num
 
+    let sendAndReceiveFEN :: GameInfo -> IO FEN
+        sendAndReceiveFEN currentGameInfo = do
+            sendAll socket $ C.pack $ gameInfoToFEN currentGameInfo
+            msg <- recv socket 1024
+            return $ C.unpack msg
+
+    let loadFEN :: FEN -> IORef GameInfo -> IO ()
+        loadFEN fen gameInfoRef =
+            writeIORef gameInfoRef $ boardStateToGameInfo $ parseFEN fen
+
+
     let isLegal = clickedPosition `elem` legalMoves gameInfo
     liftIO $ case clickedPiece of
         Nothing ->
-            when isLegal $ movePiece currentPiecePosition clickedPosition gameInfoRef
+            when isLegal $ do
+                movePiece currentPiecePosition clickedPosition gameInfoRef
+                currentGameInfo <- readIORef gameInfoRef
+                newFEN <- sendAndReceiveFEN currentGameInfo
+                loadFEN newFEN gameInfoRef
         Just (clickedColor, clickedPiece, clickedNum) | clickedColor /= turn gameInfo ->
-            when isLegal $ takePiece currentPiecePosition clickedPosition (clickedColor, clickedPiece, clickedNum) gameInfoRef
+            when isLegal $ do
+                takePiece currentPiecePosition clickedPosition (clickedColor, clickedPiece, clickedNum) gameInfoRef
+                currentGameInfo <- readIORef gameInfoRef
+                newFEN <- sendAndReceiveFEN currentGameInfo
+                loadFEN newFEN gameInfoRef
         Just (color, piece, num) | color == turn gameInfo ->
             writeIORef gameInfoRef $ gameInfo { currentPiece = Just (color, piece, num) }
         _ ->
@@ -212,4 +235,4 @@ legalMoves gameInfo =
         let square :: Square
             square = toEnum $ (7 - y) * 8 + x
             squareList = getLegalMoves (parseFEN $ gameInfoToFEN gameInfo) square
-        return $ map (\s -> (fromEnum s `mod` 8, 7 - (fromEnum s `div` 8))) squareList
+        return $ map squareToPosition squareList
