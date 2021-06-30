@@ -16,6 +16,8 @@ library
       Engine.BitBoard
       Engine.BoardState
       Engine.Moves
+  other-modules:
+      Engine.Eval
   default-language:
       Haskell2010
   build-depends:       
