@@ -16,6 +16,7 @@ library
       Engine.BitBoard
       Engine.BoardState
       Engine.Moves
+      Engine.Search
   other-modules:
       Engine.Eval
   default-language:
