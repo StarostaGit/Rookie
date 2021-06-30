@@ -1,10 +1,12 @@
 module Interfaces.Notation (
-    parseFEN, FEN, pieceAsFEN
+    parseFEN, FEN, pieceAsFEN,
+    encodeBoardState
 ) where
 
 import Data.String
 import Data.Char
 import Data.Array
+import Data.List
 import Data.List.Split
 import Data.Bits
 import Control.Monad.State
@@ -14,6 +16,8 @@ import Engine.BitBoard
 import Engine.BoardState
 
 type FEN = String
+
+-- FEN to BoardState
 
 parseFEN :: FEN -> BoardState
 parseFEN fen =
@@ -51,6 +55,41 @@ parseCastling rights = foldl (\ acc (r, bb) -> if r `elem` rights then acc `xor`
         ('k', castlingRight Black King),
         ('q', castlingRight Black Queen)
     ]
+
+-- BoardState to FEN
+
+encodeBoardState :: BoardState -> FEN
+encodeBoardState board =
+    let side = if sideToMove board == White then "w" else "b"
+        castlingRights = encodeCastling $ castling board
+        epSquare = if isEmpty $ enPassant board then "-" else encodeEnPassant $ enPassant board
+        halfClock = "0"
+        fullClock = show $ (ply board + 1) `div` 2
+        mergeNumbers row = concatMap (\xs -> if head xs == '1' then show $ length xs else xs) $ group row
+        unfoldedPosition = intercalate "/" $ map (\r -> mergeNumbers $
+                                                concatMap (\f -> 
+                                                    maybe "1" ((: []) . pieceAsFEN) $ getPieceAt board (toEnum $ r * 8 + f)) [0 .. 7]) [7, 6 .. 0]
+    in
+        unwords [unfoldedPosition, side, castlingRights, epSquare, halfClock, fullClock]
+
+encodeEnPassant :: BitBoard -> String
+encodeEnPassant sq =
+    let (file, rank) = squareToFileRank (head $ toSquares sq)
+        fileEncoded = toEnum $ ord 'a' + file :: Char
+        rankEncoded = toEnum $ ord '1' + rank :: Char
+    in
+        [fileEncoded, rankEncoded]
+
+encodeCastling :: Int -> String
+encodeCastling rights =
+    let hasRights c p = rights .&. castlingRight c p > 0
+        wk = if hasRights White King then "K" else ""
+        wq = if hasRights White Queen then "Q" else ""
+        bk = if hasRights Black King then "k" else ""
+        bq = if hasRights Black Queen then "q" else ""
+        record = concat [wk, wq, bk, bq]
+    in
+        if null record then "-" else record
 
 -- Helpers
 
