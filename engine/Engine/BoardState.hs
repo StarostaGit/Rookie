@@ -24,7 +24,7 @@ data BoardState = BoardState {
     castling :: Int, -- k q K Q
     sideToMove :: Color,
     ply :: Int,
-    eval :: Int
+    eval :: Float
 }
 
 -- Board helper functions
