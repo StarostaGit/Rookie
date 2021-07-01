@@ -226,11 +226,13 @@ handleClick (x, y) gameInfoRef socket canvas = do
     let isLegal = clickedPosition `elem` legalMoves gameInfo
     liftIO $ case clickedPiece of
         Nothing ->
-            when isLegal $ do
+            if isLegal then do
                 movePiece currentPiecePosition clickedPosition gameInfoRef
                 currentGameInfo <- readIORef gameInfoRef
                 newFEN <- sendAndReceiveFEN currentGameInfo
                 loadFEN newFEN gameInfoRef
+            else
+                writeIORef gameInfoRef $ gameInfo { currentPiece = Nothing }
         Just (clickedColor, clickedPiece, clickedNum) | clickedColor /= turn gameInfo ->
             when isLegal $ do
                 takePiece currentPiecePosition clickedPosition (clickedColor, clickedPiece, clickedNum) gameInfoRef
@@ -239,8 +241,6 @@ handleClick (x, y) gameInfoRef socket canvas = do
                 loadFEN newFEN gameInfoRef
         Just (color, piece, num) | color == turn gameInfo ->
             writeIORef gameInfoRef $ gameInfo { currentPiece = Just (color, piece, num) }
-        _ ->
-            return ()
 
 -- Helpers
 
