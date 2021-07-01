@@ -23,6 +23,7 @@ data BoardState = BoardState {
     enPassant :: BitBoard,
     castling :: Int, -- k q K Q
     sideToMove :: Color,
+    kingInCheck :: Bool,
     ply :: Int,
     eval :: Float
 }
@@ -40,6 +41,7 @@ initBoard =
             enPassant = 0,
             castling = castlingRight White King .|. castlingRight White Queen .|. castlingRight Black King .|. castlingRight Black Queen,
             sideToMove = White,
+            kingInCheck = False,
             ply = 0,
             eval = 0
         }
@@ -51,6 +53,7 @@ emptyBoard = BoardState {
         enPassant = 0,
         castling = 0,
         sideToMove = White,
+        kingInCheck = False,
         ply = 0,
         eval = 0
     }
