@@ -1,6 +1,6 @@
 module Engine.Moves (
     getValidMoves, getValidMovesForAll,
-    Move (..), genMoves, makeMove,
+    Move (..), genMoves, makeMove, isLegal,
     toAlgebraicNotation
 ) where
 
@@ -26,6 +26,7 @@ data Move = Move {
     isCheck :: Bool
 } deriving (Eq, Ord, Show)
 
+-- genMoves generates pseudoLegal moves, as the search will never allow for loosing the king anyway
 genMoves :: BoardState -> [Move]
 genMoves board =
     let side = sideToMove board
@@ -69,6 +70,15 @@ makeMove move board = flip execState board $ do
         modify (\ board -> board { enPassant = square $ fromEnum (from move) + 8 * dir })
     else
         modify (\ board -> board { enPassant = 0 })
+
+isLegal :: Move -> BoardState -> Bool
+isLegal move board =
+    let player = sideToMove board
+        newBoard = makeMove move board
+        attackedSquares = foldl (.|.) 0 $ map (getValidMovesForAll newBoard (opposite player)) $ range (Pawn, King)
+        king = pieces newBoard ! player ! King
+    in
+        isEmpty $ king .&. attackedSquares
 
 toAlgebraicNotation :: Move -> String
 toAlgebraicNotation move =
