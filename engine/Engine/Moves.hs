@@ -123,11 +123,11 @@ kingMoves =
     let clearFileA = complement (file 0)
         clearFileH = complement (file 7)
     in  [
-        (clearFileH, 7),
+        (clearFileA, 7),
         (full, 8),
         (clearFileH, 9),
         (clearFileH, 1),
-        (clearFileA, -7),
+        (clearFileH, -7),
         (full, -8),
         (clearFileA, -9),
         (clearFileA, -1)
