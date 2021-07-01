@@ -36,16 +36,25 @@ genMoves board =
 
 genMovesForPiece :: BoardState -> Color -> Piece -> Square -> [Move]
 genMovesForPiece board side p sq = flip map (toSquares (getValidMoves board side p $ (square . fromEnum) sq)) $
-    (\ targetSq -> Move {
-        color = side,
-        piece = p,
-        from = sq,
-        to = targetSq,
-        Engine.Moves.castling = Engine.BoardState.castling board,
-        promotion = Nothing,
-        isCapture = containsAnyPiece board targetSq,
-        isCheck = square (fromEnum targetSq) == pieces board ! opposite side ! King
-    })
+    (\ targetSq -> 
+        let theirKing = pieces board ! side ! King
+            move = Move {
+                color = side,
+                piece = p,
+                from = sq,
+                to = targetSq,
+                Engine.Moves.castling = Engine.BoardState.castling board,
+                promotion = Nothing,
+                isCapture = containsAnyPiece board targetSq,
+                isCheck = False
+            }
+            result = makeMove move board
+        in
+            if isEmpty $ getValidMovesForAll result side p .&. theirKing then
+                move
+            else
+                move { isCheck = True }
+    )
 
 makeMove :: Move -> BoardState -> BoardState
 makeMove move board = flip execState board $ do
@@ -63,6 +72,7 @@ makeMove move board = flip execState board $ do
         put $ setPieces (newPieces // [(opposite (color move), newCapturedArr)]) board
 
     modify (\ board -> board { sideToMove = opposite $ color move })
+    modify (\ board -> board { kingInCheck = isCheck move })
 
     let diff = fromEnum (to move) - fromEnum (from move)
         dir = if color move == White then 1 else -1

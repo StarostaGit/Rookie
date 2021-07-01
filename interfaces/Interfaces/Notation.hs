@@ -14,6 +14,7 @@ import qualified Data.Map as Map
 import Common.Types
 import Engine.BitBoard
 import Engine.BoardState
+import Engine.Moves (getValidMovesForAll)
 
 type FEN = String
 
@@ -30,6 +31,11 @@ parseFEN fen =
             modify (\ board -> board { enPassant = if ep == "-" then 0
                                                    else square $ (ord (head ep) - ord 'a') + 8 * (ord (ep !! 1) - ord '1') })
             modify (\ board -> board { sideToMove = if side == "w" then White else Black })
+            board <- get
+            let player = sideToMove board
+                king = pieces board ! player ! King
+                threats = foldl (.|.) 0 $ map (getValidMovesForAll board (opposite player)) $ range (Pawn, King)
+            put board { kingInCheck = not $ isEmpty $ threats .&. king }
     in
         execState (parse fen) emptyBoard
 
@@ -67,7 +73,7 @@ encodeBoardState board =
         fullClock = show $ (ply board + 1) `div` 2
         mergeNumbers row = concatMap (\xs -> if head xs == '1' then show $ length xs else xs) $ group row
         unfoldedPosition = intercalate "/" $ map (\r -> mergeNumbers $
-                                                concatMap (\f -> 
+                                                concatMap (\f ->
                                                     maybe "1" ((: []) . pieceAsFEN) $ getPieceAt board (toEnum $ r * 8 + f)) [0 .. 7]) [7, 6 .. 0]
     in
         unwords [unfoldedPosition, side, castlingRights, epSquare, halfClock, fullClock]
