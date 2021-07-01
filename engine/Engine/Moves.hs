@@ -8,6 +8,7 @@ import Data.Array
 import Data.Bits
 import Data.Char
 import Data.Word
+import Data.Maybe
 import Control.Monad.State
 import Common.Types
 import Engine.BitBoard
@@ -35,9 +36,10 @@ genMoves board =
         concatMap (\ sq -> genMovesForPiece board side (case getPieceAt board sq of Just (_, p) -> p) sq) pieceList
 
 genMovesForPiece :: BoardState -> Color -> Piece -> Square -> [Move]
-genMovesForPiece board side p sq = flip map (toSquares (getValidMoves board side p $ (square . fromEnum) sq)) $
-    (\ targetSq -> 
+genMovesForPiece board side p sq = flip concatMap (toSquares (getValidMoves board side p $ (square . fromEnum) sq)) $
+    (\ targetSq -> flip execState [] $ do
         let theirKing = pieces board ! side ! King
+            causesCheck move attacker = not $ isEmpty $ getValidMovesForAll result side attacker .&. theirKing where result = makeMove move board
             move = Move {
                 color = side,
                 piece = p,
@@ -48,12 +50,13 @@ genMovesForPiece board side p sq = flip map (toSquares (getValidMoves board side
                 isCapture = containsAnyPiece board targetSq,
                 isCheck = False
             }
-            result = makeMove move board
-        in
-            if isEmpty $ getValidMovesForAll result side p .&. theirKing then
-                move
-            else
-                move { isCheck = True }
+
+        if p == Pawn && snd (squareToFileRank (to move)) `elem` promotionRanks then do
+            put $ map (\ p -> move { promotion = Just p }) $ range (Knight, Queen)
+            modify (map (\ m -> m { isCheck = causesCheck m (case promotion m of Just a -> a) }))
+        else do
+            put [move]
+            modify (map (\ m -> m { isCheck = causesCheck m p }))
     )
 
 makeMove :: Move -> BoardState -> BoardState
@@ -81,6 +84,16 @@ makeMove move board = flip execState board $ do
     else
         modify (\ board -> board { enPassant = 0 })
 
+    when (isJust $ promotion move) $ do
+        board <- get
+        let promotedTo = case promotion move of Just p -> p
+            oldPieces = pieces board
+            newPawnsBB = (oldPieces ! color move ! Pawn) `xor` square (fromEnum $ to move)
+            newPromotedBB = (oldPieces ! color move ! promotedTo) `xor` square (fromEnum $ to move)
+            newPiecesArr = (oldPieces ! color move) // [(piece move, newPawnsBB), (promotedTo, newPromotedBB)]
+            newPieces = oldPieces // [(color move, newPiecesArr)]
+        put $ setPieces newPieces board
+
 isLegal :: Move -> BoardState -> Bool
 isLegal move board =
     let player = sideToMove board
@@ -100,6 +113,8 @@ toAlgebraicNotation move =
         (if isCapture move then "x" else "") ++
         [   toEnum (targetFile + ord 'a') :: Char
         ,   toEnum (targetRank + ord '1') :: Char] ++
+        (case promotion move of Just p  -> "=" ++ pieceEncoding ! p
+                                Nothing -> "") ++
         (if isCheck move then "+" else "")
 
 -- Legal moves generation
@@ -173,6 +188,9 @@ knightMovesValid state color mask =
         genKnightMoves knights ourPieces
 
 -- Pawn
+
+promotionRanks :: [Int]
+promotionRanks = [0, 7]
 
 pawnOneStep :: BitBoard -> Color -> BitBoard
 pawnOneStep pawns White = shift pawns 8
