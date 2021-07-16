@@ -18,19 +18,17 @@ executable rookie-client
       Haskell2010
   build-depends:
       base >= 4.7 && < 5
-    , threepenny-gui
-    , common
-    , filepath
-    , containers
-    , tuple
     , array
+    , common
+    , containers
+    -- , engine
     , interfaces
-    , network >= 3.1.2.2
-    , network-run
-    , bytestring
-    , engine
-  other-modules:
-      Client.Draw
-    , Client.Settings
-    , Client.Convert
-    , Client.GameInfo
+    , Shpadoinkle
+    , Shpadoinkle-html
+    , Shpadoinkle-backend-pardiff
+  -- other-modules:
+      -- Client.Draw
+    -- , Client.Settings
+    -- , Client.Convert
+    -- , Client.GameInfo
+
